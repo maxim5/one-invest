@@ -10,12 +10,14 @@ public class BondDataAggregator {
     private final BlackTerminalProvider blackTerminalProvider = new BlackTerminalProvider();
     private final DohodProvider dohodProvider = new DohodProvider();
     private final FinPlanProvider finPlanProvider = new FinPlanProvider();
+    private final SmartlabProvider smartlabProvider = new SmartlabProvider();
 
     public @NotNull BondData fetchAllData(@NotNull Isin isin) {
         BlackTerminalData blackTerminalData = fetchBlackTerminalData(isin);
         DohodData dohodData = fetchDohodData(isin);
         FinPlanData finPlanData = fetchFinPlanData(isin);
-        return new BondData(isin, dohodData, blackTerminalData, finPlanData);
+        SmartlabData smartlabData = fetchSmartlabData(isin);
+        return new BondData(isin, dohodData, blackTerminalData, finPlanData, smartlabData);
     }
 
     private @Nullable BlackTerminalData fetchBlackTerminalData(@NotNull Isin isin) {
@@ -41,6 +43,15 @@ public class BondDataAggregator {
             return finPlanProvider.fetch(isin);
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch FinPlan data for: %s", isin);
+            return null;
+        }
+    }
+
+    private @Nullable SmartlabData fetchSmartlabData(@NotNull Isin isin) {
+        try {
+            return smartlabProvider.fetch(isin);
+        } catch (Throwable throwable) {
+            log.atWarning().withCause(throwable).log("Failed to fetch SmartLab data for: %s", isin);
             return null;
         }
     }

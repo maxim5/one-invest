@@ -34,6 +34,23 @@ public class Parsing {
         return input -> extractBetween(input, from, to);
     }
 
+    public static @NotNull String extractAfter(@NotNull String input, @NotNull String from) {
+        int i = input.indexOf(from);
+        ParseException.assure(i >= 0, "Parsing failed: from not found `%s`", from);
+        i += from.length();
+        return input.substring(i);
+    }
+
+    public static @NotNull String extractAfter(@NotNull String input, @NotNull String from,
+                                                 @NotNull Function<String, String> callback) {
+        String result = extractAfter(input, from);
+        return callback.apply(result);
+    }
+
+    public static @NotNull Function<String, String> extractAfter(@NotNull String from) {
+        return input -> extractAfter(input, from);
+    }
+
     public static int countOccurrences(@Nullable String str, @Nullable String sub) {
         if (str == null || str.length() == 0 || sub == null || sub.length() == 0) {
             return 0;
@@ -45,5 +62,13 @@ public class Parsing {
             i += sub.length();
         }
         return count;
+    }
+
+    public static int parseInt(@NotNull String s) {
+        return Integer.parseInt(s.trim().replaceAll("[^0-9.+-]", ""));
+    }
+
+    public static double parseDouble(@NotNull String s) {
+        return Double.parseDouble(s.trim().replaceAll("[^0-9.+-]", ""));
     }
 }

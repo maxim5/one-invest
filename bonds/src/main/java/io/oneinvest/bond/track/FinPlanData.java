@@ -3,6 +3,9 @@ package io.oneinvest.bond.track;
 import io.oneinvest.util.Parsing;
 import org.jetbrains.annotations.NotNull;
 
+import static io.oneinvest.util.Parsing.parseDouble;
+import static io.oneinvest.util.Parsing.parseInt;
+
 public record FinPlanData(@NotNull Isin isin,
                           double notional,
                           boolean defaults,
@@ -36,27 +39,19 @@ public record FinPlanData(@NotNull Isin isin,
         String totalYield = Parsing.extractBetween(form, "Общая доходность:", "&nbsp;").trim();
         return new FinPlanData(
             Isin.of(isin),
-            safeParseDouble(notional),
+            parseDouble(notional),
             defaults.equals("нет"),
-            safeParseDouble(price),
-            safeParseDouble(accruedInterest),
-            safeParseDouble(effectivePrice),
-            safeParseDouble(coupon),
-            safeParseDouble(couponPercent),
-            safeParseInt(couponDays),
+            parseDouble(price),
+            parseDouble(accruedInterest),
+            parseDouble(effectivePrice),
+            parseDouble(coupon),
+            parseDouble(couponPercent),
+            parseInt(couponDays),
             maturityDate,
-            safeParseInt(daysToMaturity),
-            safeParseInt(duration),
-            safeParseDouble(annualYield),
-            safeParseDouble(totalYield)
+            parseInt(daysToMaturity),
+            parseInt(duration),
+            parseDouble(annualYield),
+            parseDouble(totalYield)
         );
-    }
-
-    private static double safeParseDouble(@NotNull String s) {
-        return Double.parseDouble(s.replace(",", "").replace("%", ""));
-    }
-
-    private static int safeParseInt(@NotNull String s) {
-        return Integer.parseInt(s);
     }
 }

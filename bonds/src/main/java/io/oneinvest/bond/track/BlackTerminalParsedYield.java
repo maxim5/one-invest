@@ -7,6 +7,8 @@ import java.text.Normalizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.oneinvest.util.Parsing.parseDouble;
+
 public record BlackTerminalParsedYield(double notional,
                                        double price,
                                        double defaultCommissionRate,
@@ -24,14 +26,14 @@ public record BlackTerminalParsedYield(double notional,
         }
         try {
             return new BlackTerminalParsedYield(
-                safeParseDouble(matcher.group(3)),
-                safeParseDouble(matcher.group(4)),
-                safeParseDouble(matcher.group(7)),
-                safeParseDouble(matcher.group(12)),
-                safeParseDouble(matcher.group(14)),
-                safeParseDouble(matcher.group(22)),
-                safeParseDouble(matcher.group(30)),
-                safeParseDouble(matcher.group(37))
+                parseDouble(matcher.group(3)),
+                parseDouble(matcher.group(4)),
+                parseDouble(matcher.group(7)),
+                parseDouble(matcher.group(12)),
+                parseDouble(matcher.group(14)),
+                parseDouble(matcher.group(22)),
+                parseDouble(matcher.group(30)),
+                parseDouble(matcher.group(37))
             );
         } catch (Exception e) {
             return null;
@@ -71,9 +73,5 @@ public record BlackTerminalParsedYield(double notional,
 
     private static @NotNull String fixWhitespace(@NotNull String s) {
         return s.replace("\u00A0", " ").replaceAll("\\s+", " ").trim();
-    }
-
-    private static double safeParseDouble(@NotNull String s) {
-        return Double.parseDouble(s.replace(",", "").replaceAll("[$]", ""));
     }
 }
