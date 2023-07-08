@@ -4,6 +4,9 @@ import com.google.common.flogger.FluentLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+import java.util.stream.Stream;
+
 public class BondDataAggregator {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
 
@@ -13,16 +16,23 @@ public class BondDataAggregator {
     private final SmartlabProvider smartlabProvider = new SmartlabProvider();
 
     public @NotNull BondData fetchAllData(@NotNull Isin isin) {
-        BlackTerminalData blackTerminalData = fetchBlackTerminalData(isin);
         DohodData dohodData = fetchDohodData(isin);
         FinPlanData finPlanData = fetchFinPlanData(isin);
         SmartlabData smartlabData = fetchSmartlabData(isin);
+
+        String board = Stream.of(smartlabData, dohodData)
+            .filter(Objects::nonNull)
+            .findAny()
+            .map(BondBasicInfo::board)
+            .orElse("TQCB");
+        BlackTerminalData blackTerminalData = fetchBlackTerminalData(isin, board);
+
         return new BondData(isin, dohodData, blackTerminalData, finPlanData, smartlabData);
     }
 
-    private @Nullable BlackTerminalData fetchBlackTerminalData(@NotNull Isin isin) {
+    private @Nullable BlackTerminalData fetchBlackTerminalData(@NotNull Isin isin, @NotNull String board) {
         try {
-            return blackTerminalProvider.fetch(isin);
+            return blackTerminalProvider.fetch(isin, board);
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch BlackTerminal data for: %s", isin);
             return null;

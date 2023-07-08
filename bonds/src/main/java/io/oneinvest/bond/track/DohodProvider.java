@@ -14,19 +14,16 @@ import java.util.List;
 
 public class DohodProvider {
     public @NotNull DohodData fetch(@NotNull Isin isin) {
-        TimeSeries dailyPrices = fetchRates(isin);
         DohodBondMap[] bonds = fetchReplacement(isin);
-        return new DohodData(
-            isin,
-            dailyPrices,
-            Arrays.stream(bonds).filter(bond -> bond.matches(isin)).findFirst().orElseThrow(),
-            Arrays.stream(bonds).filter(bond -> !bond.matches(isin)).toList()
-        );
+        DohodBondMap thisBond = Arrays.stream(bonds).filter(bond -> bond.matches(isin)).findFirst().orElseThrow();
+        List<DohodBondMap> replacements = Arrays.stream(bonds).filter(bond -> !bond.matches(isin)).toList();
+        TimeSeries dailyPrices = fetchRates(isin, thisBond.boardid());
+        return new DohodData(isin, dailyPrices, thisBond, replacements);
     }
 
-    private static @NotNull TimeSeries fetchRates(@NotNull Isin isin) {
+    private static @NotNull TimeSeries fetchRates(@NotNull Isin isin, @NotNull String boardid) {
         String url = "https://www.dohod.ru/assets/components/dohodbonds/connectorweb.php" +
-                     "?action=rates&secid=%s&boardid=TQCB".formatted(isin);
+                     "?action=rates&secid=%s&boardid=%s".formatted(isin, boardid);
         String response = Http.httpCall(url);
 
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
