@@ -21,6 +21,11 @@ public record DohodData(@NotNull Isin isin,
     }
 
     @Override
+    public @NotNull String board() {
+        return bond.boardid();
+    }
+
+    @Override
     public @NotNull String issueDate() {
         return Objects.requireNonNull(bond.issueDate());
     }

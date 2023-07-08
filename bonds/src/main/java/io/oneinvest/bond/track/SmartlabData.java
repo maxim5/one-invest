@@ -10,6 +10,7 @@ import static io.oneinvest.util.Parsing.*;
 public record SmartlabData(@NotNull Isin isin,
                            @NotNull String name,
                            @NotNull String shortname,
+                           @NotNull String board,
                            double price,
                            double yield,
                            double yearsToMaturity,
@@ -37,10 +38,12 @@ public record SmartlabData(@NotNull Isin isin,
         String shortname = Parsing.applyOrEmpty(info, extractAfter("\tНазвание"), extractDivValue());
         String name = Parsing.applyOrEmpty(info, extractAfter("\tИмя облигации"), extractDivValue());
         String isin = Parsing.applyOrEmpty(info, extractAfter("\tISIN"), extractDivValue());
+        String board = Parsing.applyOrEmpty(info, extractAfter("\tРежим торгов"), extractDivValue());
         return new SmartlabData(
             Isin.of(isin),
             name,
             shortname,
+            board,
             parseDouble(price, -1),
             parseDouble(yield, -1),
             parseDouble(yearsToMaturity, -1),

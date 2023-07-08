@@ -19,6 +19,11 @@ public record BondData(@NotNull Isin isin,
     }
 
     @Override
+    public @NotNull String board() {
+        return firstNonNull(smartlabData, dohodData).board();
+    }
+
+    @Override
     public @NotNull String issueDate() {
         return firstNonNull(smartlabData, dohodData).issueDate();
     }

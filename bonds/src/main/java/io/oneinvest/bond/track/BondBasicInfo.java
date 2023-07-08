@@ -9,6 +9,8 @@ public interface BondBasicInfo {
 
     @NotNull String shortname();
 
+    @NotNull String board();
+
     @NotNull String issueDate();
 
     @NotNull String maturityDate();
