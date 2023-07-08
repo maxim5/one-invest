@@ -26,14 +26,14 @@ public record BlackTerminalParsedYield(double notional,
         }
         try {
             return new BlackTerminalParsedYield(
-                parseDouble(matcher.group(3)),
-                parseDouble(matcher.group(4)),
-                parseDouble(matcher.group(7)),
-                parseDouble(matcher.group(12)),
-                parseDouble(matcher.group(14)),
-                parseDouble(matcher.group(22)),
-                parseDouble(matcher.group(30)),
-                parseDouble(matcher.group(37))
+                parseDouble(matcher.group(3), -1),
+                parseDouble(matcher.group(4), -1),
+                parseDouble(matcher.group(7), -1),
+                parseDouble(matcher.group(12), -1),
+                parseDouble(matcher.group(14), -1),
+                parseDouble(matcher.group(22), -1),
+                parseDouble(matcher.group(30), -1),
+                parseDouble(matcher.group(37), -1)
             );
         } catch (Exception e) {
             return null;

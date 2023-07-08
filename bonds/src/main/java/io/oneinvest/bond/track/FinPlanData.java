@@ -21,37 +21,37 @@ public record FinPlanData(@NotNull Isin isin,
                           double annualYield,
                           double totalYield) {
     public static @NotNull FinPlanData fromHttpRu(@NotNull String rawHttp) {
-        String form = Parsing.extractBetween(rawHttp, "<h2>Параметры облигации", "</ul>");
-        String isin = Parsing.extractBetween(form, "ISIN:", "&nbsp;");
-        String notional = Parsing.extractBetween(form, "Номинал: ", " ");
-        String defaults = Parsing.extractBetween(form, "Дефолты: ", "&nbsp;").trim();
-        String price = Parsing.extractBetween(form, "<span id=\"price_value\">", "</span>");
-        String accruedInterest = Parsing.extractBetween(form, "<span id=\"nkd_value\">", " ");
-        String effectivePrice = Parsing.extractBetween(form, "Текущая цена с учетом НКД: ", " ");
-        String couponArea = Parsing.extractBetween(form, "Размер купона:", "</p>");
-        String coupon = Parsing.extractBetween(couponArea, " ", " ");
-        String couponPercent = Parsing.extractBetween(couponArea, "(", ")");
-        String couponDays = Parsing.extractBetween(form, "Длит. купона:", "</p>").trim();
-        String maturityDate = Parsing.extractBetween(form, "Дата погашения облигации:", "</p>").trim();
-        String daysToMaturity = Parsing.extractBetween(form, "Кол-во дней до погашения облигации:", "</p>").trim();
-        String duration = Parsing.extractBetween(form, "Дюрация:", " дн").trim();
-        String annualYield = Parsing.extractBetween(form, "Расчетная годовая доходность:", "&nbsp;").trim();
-        String totalYield = Parsing.extractBetween(form, "Общая доходность:", "&nbsp;").trim();
+        String form = Parsing.extractBetweenOrEmpty(rawHttp, "<h2>Параметры облигации", "</ul>");
+        String isin = Parsing.extractBetweenOrEmpty(form, "ISIN:", "&nbsp;");
+        String notional = Parsing.extractBetweenOrEmpty(form, "Номинал: ", " ");
+        String defaults = Parsing.extractBetweenOrEmpty(form, "Дефолты: ", "&nbsp;").trim();
+        String price = Parsing.extractBetweenOrEmpty(form, "<span id=\"price_value\">", "</span>");
+        String accruedInterest = Parsing.extractBetweenOrEmpty(form, "<span id=\"nkd_value\">", " ");
+        String effectivePrice = Parsing.extractBetweenOrEmpty(form, "Текущая цена с учетом НКД: ", " ");
+        String couponArea = Parsing.extractBetweenOrEmpty(form, "Размер купона:", "</p>");
+        String coupon = Parsing.extractBetweenOrEmpty(couponArea, " ", " ");
+        String couponPercent = Parsing.extractBetweenOrEmpty(couponArea, "(", ")");
+        String couponDays = Parsing.extractBetweenOrEmpty(form, "Длит. купона:", "</p>").trim();
+        String maturityDate = Parsing.extractBetweenOrEmpty(form, "Дата погашения облигации:", "</p>").trim();
+        String daysToMaturity = Parsing.extractBetweenOrEmpty(form, "Кол-во дней до погашения облигации:", "</p>").trim();
+        String duration = Parsing.extractBetweenOrEmpty(form, "Дюрация:", " дн").trim();
+        String annualYield = Parsing.extractBetweenOrEmpty(form, "Расчетная годовая доходность:", "&nbsp;").trim();
+        String totalYield = Parsing.extractBetweenOrEmpty(form, "Общая доходность:", "&nbsp;").trim();
         return new FinPlanData(
             Isin.of(isin),
-            parseDouble(notional),
+            parseDouble(notional, -1),
             defaults.equals("нет"),
-            parseDouble(price),
-            parseDouble(accruedInterest),
-            parseDouble(effectivePrice),
-            parseDouble(coupon),
-            parseDouble(couponPercent),
-            parseInt(couponDays),
+            parseDouble(price, -1),
+            parseDouble(accruedInterest, -1),
+            parseDouble(effectivePrice, -1),
+            parseDouble(coupon, -1),
+            parseDouble(couponPercent, -1),
+            parseInt(couponDays, -1),
             maturityDate,
-            parseInt(daysToMaturity),
-            parseInt(duration),
-            parseDouble(annualYield),
-            parseDouble(totalYield)
+            parseInt(daysToMaturity, -1),
+            parseInt(duration, -1),
+            parseDouble(annualYield, -1),
+            parseDouble(totalYield, -1)
         );
     }
 }
