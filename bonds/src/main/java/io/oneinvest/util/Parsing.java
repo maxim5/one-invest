@@ -87,6 +87,9 @@ public class Parsing {
     }
 
     public static int parseInt(@NotNull String s, int def) {
+        if (s.isEmpty()) {
+            return def;
+        }
         try {
             return Integer.parseInt(s.trim().replaceAll("[^0-9.+-]", ""));
         } catch (NumberFormatException e) {
@@ -96,6 +99,9 @@ public class Parsing {
     }
 
     public static double parseDouble(@NotNull String s, double def) {
+        if (s.isEmpty()) {
+            return def;
+        }
         try {
             return Double.parseDouble(s.trim().replaceAll("[^0-9.+-]", ""));
         } catch (NumberFormatException e) {
