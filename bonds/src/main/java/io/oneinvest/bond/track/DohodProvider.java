@@ -2,8 +2,11 @@ package io.oneinvest.bond.track;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.google.common.flogger.FluentLogger;
 import io.oneinvest.util.Http;
 import io.oneinvest.util.TimeSeries;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DohodProvider {
+    private static final FluentLogger log = FluentLogger.forEnclosingClass();
+
     public @NotNull DohodData fetch(@NotNull Isin isin) {
         DohodBondMap[] bonds = fetchReplacement(isin);
         DohodBondMap thisBond = Arrays.stream(bonds).filter(bond -> bond.matches(isin)).findFirst().orElseThrow();
@@ -44,8 +49,26 @@ public class DohodProvider {
                      "?action=replacement&isin=%s&mode=regular".formatted(isin);
         String response = Http.httpCall(url);
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper mapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .addHandler(new DeserializationProblemHandler() {
+                @Override
+                public Object handleWeirdStringValue(DeserializationContext ctxt, Class<?> targetType,
+                                                     String valueToConvert, String failureMsg) {
+                    log.atWarning().log("Failed to parse the string: %s", failureMsg);
+                    if (Number.class.isAssignableFrom(targetType)) {
+                        return -1;
+                    }
+                    return null;
+                }
+                @Override
+                public Object handleWeirdNumberValue(DeserializationContext ctxt, Class<?> targetType,
+                                                     Number valueToConvert, String failureMsg) {
+                    log.atWarning().log("Failed to parse the number: %s", failureMsg);
+                    return -1;
+                }
+            });
+
         try {
             return mapper.readValue(response, DohodBondMap[].class);
         } catch (JsonProcessingException e) {
