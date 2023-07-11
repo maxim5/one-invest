@@ -1,5 +1,7 @@
 package io.oneinvest.bond.track;
 
+import java.util.List;
+
 public class Main {
     // More:
     // https://www.moex.com/ru/issue.aspx?board=TQCB&code=RU000A105YQ9
@@ -7,6 +9,24 @@ public class Main {
     // https://cbonds.ru/bonds/1405840/
 
     public static void main(String[] args) {
+//        fetchOne();
+//        analyze();
+        analyzePortfolio();
+    }
+
+    private static void analyzePortfolio() {
+        BondAnalyzer analyzer = new BondAnalyzer();
+        List<Position> positions = IsinSource.fromPosTxt();
+        analyzer.analyzePortfolio(positions);
+    }
+
+    private static void analyze() {
+        BondAnalyzer analyzer = new BondAnalyzer();
+        List<Isin> isins = IsinSource.fromIsinTxt();
+        analyzer.analyze(isins);
+    }
+
+    private static void fetchOne() {
         // XS0971721450
         // RU000A106987
         Isin isin = Isin.of("RU000A105YQ9");
