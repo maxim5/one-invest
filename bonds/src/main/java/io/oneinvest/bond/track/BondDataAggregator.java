@@ -16,16 +16,20 @@ public class BondDataAggregator {
     private final SmartlabProvider smartlabProvider = new SmartlabProvider();
 
     public @NotNull BondData fetchAllData(@NotNull Isin isin) {
-        DohodData dohodData = fetchDohodData(isin);
-        FinPlanData finPlanData = fetchFinPlanData(isin);
-        SmartlabData smartlabData = fetchSmartlabData(isin);
+        return fetchAllData(isin, Options.ALL);
+    }
+
+    public @NotNull BondData fetchAllData(@NotNull Isin isin, @NotNull Options options) {
+        DohodData dohodData = options.fetchDohod() ? fetchDohodData(isin) : null;
+        FinPlanData finPlanData = options.fetchFinPlan() ? fetchFinPlanData(isin) : null;
+        SmartlabData smartlabData = options.fetchSmartlab() ? fetchSmartlabData(isin) : null;
 
         String board = Stream.of(smartlabData, dohodData)
             .filter(Objects::nonNull)
             .findAny()
             .map(BondBasicInfo::board)
             .orElse("TQCB");
-        BlackTerminalData blackTerminalData = fetchBlackTerminalData(isin, board);
+        BlackTerminalData blackTerminalData = options.fetchBlackTerminal() ? fetchBlackTerminalData(isin, board) : null;
 
         return new BondData(isin, dohodData, blackTerminalData, finPlanData, smartlabData);
     }
@@ -64,5 +68,17 @@ public class BondDataAggregator {
             log.atWarning().withCause(throwable).log("Failed to fetch SmartLab data for: %s", isin);
             return null;
         }
+    }
+
+    public record Options(boolean fetchBlackTerminal,
+                          boolean fetchDohod,
+                          boolean fetchFinPlan,
+                          boolean fetchSmartlab) {
+        public static final Options ALL = new Options(true, true, true, true);
+        public static final Options NONE = new Options(false, false, false, false);
+        public static final Options JUST_BLACK_TERMINAL = new Options(true, false, false, false);
+        public static final Options JUST_DOHOD = new Options(false, true, false, false);
+        public static final Options JUST_FIN_PLAN = new Options(false, false, true, false);
+        public static final Options JUST_SMARTLAB = new Options(false, false, false, true);
     }
 }
