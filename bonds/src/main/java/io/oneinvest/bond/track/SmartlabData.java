@@ -3,6 +3,9 @@ package io.oneinvest.bond.track;
 import io.oneinvest.util.Parsing;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 import static io.oneinvest.util.Parsing.*;
@@ -21,7 +24,10 @@ public record SmartlabData(@NotNull Isin isin,
                            double couponYield,
                            double couponAbs,
                            double couponAbsAnnual,
-                           double frequency) implements BondBasicInfo, BondCouponInfo {
+                           double frequency,
+                           @NotNull List<Payment> payments) implements BondBasicInfo, BondCouponInfo, BondCashflowInfo {
+    private static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd-MM-yyyy");
+
     public static @NotNull SmartlabData fromHttpRu(@NotNull String rawHttp) {
         String info = Parsing.extractBetweenOrEmpty(rawHttp, "<section class=\"quotes-info-list\">", "</section>");
         String price = Parsing.applyOrEmpty(info, extractAfter("\tКотировка облигации"), extractDivValue());
@@ -39,6 +45,7 @@ public record SmartlabData(@NotNull Isin isin,
         String name = Parsing.applyOrEmpty(info, extractAfter("\tИмя облигации"), extractDivValue());
         String isin = Parsing.applyOrEmpty(info, extractAfter("\tISIN"), extractDivValue());
         String board = Parsing.applyOrEmpty(info, extractAfter("\tРежим торгов"), extractDivValue());
+        List<Payment> payments = extractPayments(rawHttp);
         return new SmartlabData(
             Isin.of(isin),
             name,
@@ -54,11 +61,38 @@ public record SmartlabData(@NotNull Isin isin,
             parseDouble(couponYield, -1),
             parseDouble(couponAbs, -1),
             parseDouble(couponAbsAnnual, -1),
-            parseDouble(frequency, -1)
+            parseDouble(frequency, -1),
+            payments
         );
     }
 
+    private static @NotNull List<Payment> extractPayments(@NotNull String rawHttp) {
+        String table = Parsing.applyOrEmpty(
+            rawHttp,
+            Parsing.extractAfter("Календарь выплаты купонов"),
+            Parsing.extractBetween("custom-table", "</table>"),
+            Parsing.extractBetween("<tbody", "</tbody>")
+        );
+        return Parsing.extractAll(table, "<tr>", "</tr>").stream().map(line -> {
+            List<String> row = extractAll(line, "<td>", "</td>");
+            Date date = parseDate(FORMAT, row.get(1), NO_DATE);
+            double value = parseDouble(row.get(2), -1);
+            double annualYield = parseDouble(row.get(3), -1);
+            return new Payment(date, value, annualYield);
+        }).toList();
+    }
+
     private static @NotNull Function<String, String> extractDivValue() {
-        return s -> Parsing.applyOrEmpty(s, Parsing.extractBetween("<div ", "</div>"), Parsing.extractAfter(">"), String::trim);
+//        return s -> Parsing.applyOrEmpty(s, Parsing.extractBetween("<div ", "</div>"), Parsing.extractAfter(">"), String::trim);
+        return extractTagValue("div");
+    }
+
+    private static @NotNull Function<String, String> extractTagValue(@NotNull String tag) {
+        return s -> Parsing.applyOrEmpty(
+            s,
+            Parsing.extractBetween("<%s".formatted(tag), "</%s>".formatted(tag)),
+            Parsing.extractAfter(">"),
+            String::trim
+        );
     }
 }
