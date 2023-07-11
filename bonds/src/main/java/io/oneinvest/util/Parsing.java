@@ -4,6 +4,10 @@ import com.google.common.flogger.FluentLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 public class Parsing {
@@ -64,13 +68,33 @@ public class Parsing {
     }
 
     public static @NotNull String extractAfter(@NotNull String input, @NotNull String from,
-                                                 @NotNull Function<String, String> callback) {
+                                               @NotNull Function<String, String> callback) {
         String result = extractAfter(input, from);
         return callback.apply(result);
     }
 
     public static @NotNull Function<String, String> extractAfter(@NotNull String from) {
         return input -> extractAfter(input, from);
+    }
+
+    public static @NotNull List<String> extractAll(@NotNull String input, @NotNull String from, @NotNull String to) {
+        List<String> result = new ArrayList<>();
+        int i = 0;
+        while (true) {
+            i = input.indexOf(from, i);
+            if (i < 0) {
+                break;
+            }
+            i += from.length();
+            int j = input.indexOf(to, i);
+            if (j < 0) {
+                break;
+            }
+            String extracted = input.substring(i, j);
+            result.add(extracted);
+            i = j + to.length();
+        }
+        return result;
     }
 
     public static int countOccurrences(@Nullable String str, @Nullable String sub) {
@@ -107,6 +131,24 @@ public class Parsing {
         } catch (NumberFormatException e) {
             log.atWarning().withCause(e).log("Failed to parse the double: `%s`", s);
             return def;
+        }
+    }
+
+    public static final Date NO_DATE = new Date(0);
+
+    public static @NotNull Date parseDate(@NotNull DateFormat format, @NotNull String s, @NotNull Date def) {
+        try {
+            return format.parse(s);
+        } catch (java.text.ParseException e) {
+            return def;
+        }
+    }
+
+    public static @Nullable Date parseDate(@NotNull DateFormat format, @NotNull String s) {
+        try {
+            return format.parse(s);
+        } catch (java.text.ParseException e) {
+            return null;
         }
     }
 }
