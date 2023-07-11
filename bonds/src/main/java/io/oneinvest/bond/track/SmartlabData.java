@@ -86,8 +86,8 @@ public record SmartlabData(@NotNull Isin isin,
         return Parsing.extractAll(table, "<tr>", "</tr>").stream().map(line -> {
             List<String> row = extractAll(line, "<td>", "</td>");
             Date date = parseDate(FORMAT, row.get(1), NO_DATE);
-            double value = parseDouble(row.get(2), -1);
-            double annualYield = parseDouble(row.get(3), -1);
+            double value = parseTableValueOrIgnore(row.get(2));
+            double annualYield = parseTableValueOrIgnore(row.get(3));
             return new Payment(date, value, annualYield);
         }).toList();
     }
@@ -104,5 +104,9 @@ public record SmartlabData(@NotNull Isin isin,
             Parsing.extractAfter(">"),
             String::trim
         );
+    }
+
+    private static double parseTableValueOrIgnore(@NotNull String s) {
+        return s.contains("&mdash;") ? -1 : parseDouble(s, -1);
     }
 }
