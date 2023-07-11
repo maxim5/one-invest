@@ -86,7 +86,7 @@ public class BondDataAggregator {
                           boolean fetchFinPlan,
                           boolean fetchMoex,
                           boolean fetchSmartlab) {
-        public static final Options ALL = new Options(true, true, true, false, true);
+        public static final Options ALL = new Options(true, true, true, true, true);
         public static final Options NONE = new Options(false, false, false, false, false);
         public static final Options JUST_BLACK_TERMINAL = new Options(true, false, false, false, false);
         public static final Options JUST_DOHOD = new Options(false, true, false, false, false);
