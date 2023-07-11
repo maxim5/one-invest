@@ -2,6 +2,8 @@ package io.oneinvest.bond.track;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Date;
+
 public interface BondBasicInfo {
     @NotNull Isin isin();
 
@@ -11,7 +13,11 @@ public interface BondBasicInfo {
 
     @NotNull String board();
 
-    @NotNull String issueDate();
+    @NotNull String issueDateStr();
 
-    @NotNull String maturityDate();
+    @NotNull Date issueDate();
+
+    @NotNull String maturityDateStr();
+
+    @NotNull Date maturityDate();
 }

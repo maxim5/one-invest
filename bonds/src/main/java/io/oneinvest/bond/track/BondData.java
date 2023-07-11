@@ -3,6 +3,8 @@ package io.oneinvest.bond.track;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Date;
+
 public record BondData(@NotNull Isin isin,
                        @Nullable DohodData dohodData,
                        @Nullable BlackTerminalData blackTerminalData,
@@ -24,12 +26,22 @@ public record BondData(@NotNull Isin isin,
     }
 
     @Override
-    public @NotNull String issueDate() {
+    public @NotNull String issueDateStr() {
+        return firstNonNull(smartlabData, dohodData).issueDateStr();
+    }
+
+    @Override
+    public @NotNull Date issueDate() {
         return firstNonNull(smartlabData, dohodData).issueDate();
     }
 
     @Override
-    public @NotNull String maturityDate() {
+    public @NotNull String maturityDateStr() {
+        return firstNonNull(smartlabData, dohodData).maturityDateStr();
+    }
+
+    @Override
+    public @NotNull Date maturityDate() {
         return firstNonNull(smartlabData, dohodData).maturityDate();
     }
 

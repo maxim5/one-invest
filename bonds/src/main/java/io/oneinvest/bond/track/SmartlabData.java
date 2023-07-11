@@ -17,8 +17,8 @@ public record SmartlabData(@NotNull Isin isin,
                            double price,
                            double yield,
                            double yearsToMaturity,
-                           @NotNull String issueDate,
-                           @NotNull String maturityDate,
+                           @NotNull String issueDateStr,
+                           @NotNull String maturityDateStr,
                            int duration,
                            double notional,
                            double couponYield,
@@ -27,6 +27,16 @@ public record SmartlabData(@NotNull Isin isin,
                            double frequency,
                            @NotNull List<Payment> payments) implements BondBasicInfo, BondCouponInfo, BondCashflowInfo {
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd-MM-yyyy");
+
+    @Override
+    public @NotNull Date issueDate() {
+        return Parsing.parseDate(FORMAT, issueDateStr(), Parsing.NO_DATE);
+    }
+
+    @Override
+    public @NotNull Date maturityDate() {
+        return Parsing.parseDate(FORMAT, maturityDateStr(), Parsing.NO_DATE);
+    }
 
     public static @NotNull SmartlabData fromHttpRu(@NotNull String rawHttp) {
         String info = Parsing.extractBetweenOrEmpty(rawHttp, "<section class=\"quotes-info-list\">", "</section>");
