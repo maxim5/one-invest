@@ -2,9 +2,7 @@ package io.oneinvest.bond.track;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.common.flogger.FluentLogger;
 import io.oneinvest.util.Http;
@@ -51,6 +49,7 @@ public class DohodProvider {
 
         ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
             .addHandler(new DeserializationProblemHandler() {
                 @Override
                 public Object handleWeirdStringValue(DeserializationContext ctxt, Class<?> targetType,
