@@ -4,12 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Date;
+import java.util.List;
 
 public record BondData(@NotNull Isin isin,
                        @Nullable DohodData dohodData,
                        @Nullable BlackTerminalData blackTerminalData,
                        @Nullable FinPlanData finPlanData,
-                       @Nullable SmartlabData smartlabData) implements BondBasicInfo, BondCouponInfo {
+                       @Nullable MoexData moexData,
+                       @Nullable SmartlabData smartlabData) implements BondBasicInfo, BondCouponInfo, BondCashflowInfo {
     @Override
     public @NotNull String name() {
         return firstNonNull(smartlabData, dohodData).name();
@@ -63,6 +65,11 @@ public record BondData(@NotNull Isin isin,
     @Override
     public double couponAbsAnnual() {
         return firstNonNull(smartlabData, dohodData).couponAbsAnnual();
+    }
+
+    @Override
+    public @NotNull List<Payment> payments() {
+        return firstNonNull(moexData, smartlabData).payments();
     }
 
     private static <T> @NotNull T firstNonNull(@Nullable T item1, @Nullable T item2) {

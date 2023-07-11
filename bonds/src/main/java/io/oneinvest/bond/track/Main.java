@@ -16,6 +16,7 @@ public class Main {
         System.out.println(bondData.dohodData());
         System.out.println(bondData.blackTerminalData());
         System.out.println(bondData.finPlanData());
+        System.out.println(bondData.moexData());
         System.out.println(bondData.smartlabData());
     }
 }
