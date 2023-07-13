@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
-    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '5.0.0-alpha.11'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.15.1'
+    implementation group: 'com.google.inject', name: 'guice', version: '5.1.0'
+    implementation group: 'org.rocksdb', name: 'rocksdbjni', version: '7.10.2'
 }

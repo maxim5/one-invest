@@ -7,6 +7,7 @@ import java.nio.file.Path;
 
 public class DevPaths {
     public static final String PROJECT_HOME = locateProjectHome();
+    public static final String STORAGE_HOME = PROJECT_HOME + ".storage/";
     public static final String BONDS_HOME = PROJECT_HOME + "bonds/";
     public static final String BONDS_RESOURCES = BONDS_HOME + "src/main/resources/";
 
