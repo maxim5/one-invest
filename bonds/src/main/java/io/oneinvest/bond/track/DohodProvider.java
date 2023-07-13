@@ -2,10 +2,15 @@ package io.oneinvest.bond.track;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.common.flogger.FluentLogger;
 import io.oneinvest.util.Http;
+import io.oneinvest.util.Http.HttpOptions;
+import io.oneinvest.util.HttpCache;
 import io.oneinvest.util.TimeSeries;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,21 +18,23 @@ import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class DohodProvider {
+public class DohodProvider implements AutoCloseable {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
 
-    public @NotNull DohodData fetch(@NotNull Isin isin) {
-        DohodBondMap[] bonds = fetchReplacement(isin);
+    private final HttpCache cache = new HttpCache("dohod");
+
+    public @NotNull DohodData fetch(@NotNull Isin isin, @NotNull HttpOptions options) {
+        DohodBondMap[] bonds = fetchReplacement(isin, options);
         DohodBondMap thisBond = Arrays.stream(bonds).filter(bond -> bond.matches(isin)).findFirst().orElseThrow();
         List<DohodBondMap> replacements = Arrays.stream(bonds).filter(bond -> !bond.matches(isin)).toList();
-        TimeSeries dailyPrices = fetchRates(isin, thisBond.boardid());
+        TimeSeries dailyPrices = fetchRates(isin, thisBond.boardid(), options);
         return new DohodData(isin, dailyPrices, thisBond, replacements);
     }
 
-    private static @NotNull TimeSeries fetchRates(@NotNull Isin isin, @NotNull String boardid) {
+    private @NotNull TimeSeries fetchRates(@NotNull Isin isin, @NotNull String boardid, @NotNull HttpOptions options) {
         String url = "https://www.dohod.ru/assets/components/dohodbonds/connectorweb.php" +
                      "?action=rates&secid=%s&boardid=%s".formatted(isin, boardid);
-        String response = Http.httpCall(url);
+        String response = Http.httpCall(url, cache, options);
 
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
         record Point(long timestamp, double value) {}
@@ -42,10 +49,10 @@ public class DohodProvider {
         }
     }
 
-    private static @NotNull DohodBondMap[] fetchReplacement(@NotNull Isin isin) {
+    private @NotNull DohodBondMap[] fetchReplacement(@NotNull Isin isin, @NotNull HttpOptions options) {
         String url = "https://www.dohod.ru/assets/components/dohodbonds/connectorweb.php" +
                      "?action=replacement&isin=%s&mode=regular".formatted(isin);
-        String response = Http.httpCall(url);
+        String response = Http.httpCall(url, cache, options);
 
         ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -73,5 +80,10 @@ public class DohodProvider {
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    @Override
+    public void close() {
+        cache.close();
     }
 }

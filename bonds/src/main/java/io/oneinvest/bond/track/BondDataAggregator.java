@@ -1,15 +1,18 @@
 package io.oneinvest.bond.track;
 
 import com.google.common.flogger.FluentLogger;
+import io.oneinvest.util.Http.HttpOptions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-public class BondDataAggregator {
+public class BondDataAggregator implements AutoCloseable {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
 
+    private final HttpOptions httpOptions = new HttpOptions(TimeUnit.DAYS.toMillis(7));
     private final BlackTerminalProvider blackTerminalProvider = new BlackTerminalProvider();
     private final DohodProvider dohodProvider = new DohodProvider();
     private final FinPlanProvider finPlanProvider = new FinPlanProvider();
@@ -21,64 +24,88 @@ public class BondDataAggregator {
     }
 
     public @NotNull BondData fetchAllData(@NotNull Isin isin, @NotNull Options options) {
-        DohodData dohodData = options.fetchDohod() ? fetchDohodData(isin) : null;
-        FinPlanData finPlanData = options.fetchFinPlan() ? fetchFinPlanData(isin) : null;
-        MoexData moexData = options.fetchMoex() ? fetchMoexData(isin) : null;
-        SmartlabData smartlabData = options.fetchSmartlab() ? fetchSmartlabData(isin) : null;
+        DohodData dohodData = fetchDohodData(isin, options);
+        FinPlanData finPlanData = fetchFinPlanData(isin, options);
+        MoexData moexData = fetchMoexData(isin, options);
+        SmartlabData smartlabData = fetchSmartlabData(isin, options);
 
         String board = Stream.of(smartlabData, dohodData)
             .filter(Objects::nonNull)
             .findAny()
             .map(BondBasicInfo::board)
             .orElse("TQCB");
-        BlackTerminalData blackTerminalData = options.fetchBlackTerminal() ? fetchBlackTerminalData(isin, board) : null;
+        BlackTerminalData blackTerminalData = fetchBlackTerminalData(isin, board, options);
 
         return new BondData(isin, dohodData, blackTerminalData, finPlanData, moexData, smartlabData);
     }
 
-    private @Nullable BlackTerminalData fetchBlackTerminalData(@NotNull Isin isin, @NotNull String board) {
+    private @Nullable BlackTerminalData fetchBlackTerminalData(@NotNull Isin isin, @NotNull String board, @NotNull Options options) {
         try {
-            return blackTerminalProvider.fetch(isin, board);
+            if (options.fetchBlackTerminal()) {
+                return blackTerminalProvider.fetch(isin, board, httpOptions);
+            }
+            return null;
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch BlackTerminal data for: %s", isin);
             return null;
         }
     }
 
-    private @Nullable DohodData fetchDohodData(@NotNull Isin isin) {
+    private @Nullable DohodData fetchDohodData(@NotNull Isin isin, @NotNull Options options) {
         try {
-            return dohodProvider.fetch(isin);
+            if (options.fetchDohod()) {
+                return dohodProvider.fetch(isin, httpOptions);
+            }
+            return null;
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch Dohod data for: %s", isin);
             return null;
         }
     }
 
-    private @Nullable FinPlanData fetchFinPlanData(@NotNull Isin isin) {
+    private @Nullable FinPlanData fetchFinPlanData(@NotNull Isin isin, @NotNull Options options) {
         try {
-            return finPlanProvider.fetch(isin);
+            if (options.fetchFinPlan()) {
+                return finPlanProvider.fetch(isin, httpOptions);
+            }
+            return null;
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch FinPlan data for: %s", isin);
             return null;
         }
     }
 
-    private @Nullable MoexData fetchMoexData(@NotNull Isin isin) {
+    private @Nullable MoexData fetchMoexData(@NotNull Isin isin, @NotNull Options options) {
         try {
-            return moexProvider.fetch(isin);
+            if (options.fetchMoex()) {
+                return moexProvider.fetch(isin, httpOptions);
+            }
+            return null;
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch Moex data for: %s", isin);
             return null;
         }
     }
 
-    private @Nullable SmartlabData fetchSmartlabData(@NotNull Isin isin) {
+    private @Nullable SmartlabData fetchSmartlabData(@NotNull Isin isin, @NotNull Options options) {
         try {
-            return smartlabProvider.fetch(isin);
+            if (options.fetchSmartlab()) {
+                return smartlabProvider.fetch(isin, httpOptions);
+            }
+            return null;
         } catch (Throwable throwable) {
             log.atWarning().withCause(throwable).log("Failed to fetch SmartLab data for: %s", isin);
             return null;
         }
+    }
+
+    @Override
+    public void close() {
+        blackTerminalProvider.close();
+        dohodProvider.close();
+        finPlanProvider.close();
+        moexProvider.close();
+        smartlabProvider.close();
     }
 
     public record Options(boolean fetchBlackTerminal,

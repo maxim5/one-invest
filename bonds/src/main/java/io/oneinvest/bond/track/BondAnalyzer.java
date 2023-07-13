@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BondAnalyzer {
+public class BondAnalyzer implements AutoCloseable {
     private final BondDataAggregator aggregator = new BondDataAggregator();
 
     public void analyze(@NotNull List<Isin> isins) {
@@ -40,6 +40,11 @@ public class BondAnalyzer {
                 row.cashflow1() * row.pos() / totalPos
             ));
         }
+    }
+
+    @Override
+    public void close() {
+        aggregator.close();
     }
 
     private record Row(Position position, double price, double cashflow0, double cashflow1) {

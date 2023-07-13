@@ -9,34 +9,37 @@ public class Main {
     // https://cbonds.ru/bonds/1405840/
 
     public static void main(String[] args) {
-//        fetchOne();
-//        analyze();
+        fetchOne();
+        analyze();
         analyzePortfolio();
     }
 
     private static void analyzePortfolio() {
-        BondAnalyzer analyzer = new BondAnalyzer();
-        List<Position> positions = IsinSource.fromPosTxt();
-        analyzer.analyzePortfolio(positions);
+        try (BondAnalyzer analyzer = new BondAnalyzer()) {
+            List<Position> positions = IsinSource.fromPosTxt();
+            analyzer.analyzePortfolio(positions);
+        }
     }
 
     private static void analyze() {
-        BondAnalyzer analyzer = new BondAnalyzer();
-        List<Isin> isins = IsinSource.fromIsinTxt();
-        analyzer.analyze(isins);
+        try (BondAnalyzer analyzer = new BondAnalyzer()) {
+            List<Isin> isins = IsinSource.fromIsinTxt();
+            analyzer.analyze(isins);
+        }
     }
 
     private static void fetchOne() {
         // XS0971721450
         // RU000A106987
         Isin isin = Isin.of("RU000A105YQ9");
-        BondDataAggregator aggregator = new BondDataAggregator();
-        BondData bondData = aggregator.fetchAllData(isin);
-        System.out.println(bondData.isin());
-        System.out.println(bondData.dohodData());
-        System.out.println(bondData.blackTerminalData());
-        System.out.println(bondData.finPlanData());
-        System.out.println(bondData.moexData());
-        System.out.println(bondData.smartlabData());
+        try (BondDataAggregator aggregator = new BondDataAggregator()) {
+            BondData bondData = aggregator.fetchAllData(isin);
+            System.out.println(bondData.isin());
+            System.out.println(bondData.dohodData());
+            System.out.println(bondData.blackTerminalData());
+            System.out.println(bondData.finPlanData());
+            System.out.println(bondData.moexData());
+            System.out.println(bondData.smartlabData());
+        }
     }
 }
