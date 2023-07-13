@@ -8,16 +8,16 @@ public record BlackTerminalData(@NotNull Isin isin,
                                 int rating,
                                 @NotNull String rawYieldCalc) {
     public static @NotNull BlackTerminalData fromHttpEn(@NotNull String rawHttp) {
-        String isin = Parsing.apply(
+        String isin = Parsing.applyOrEmpty(
             rawHttp,
             Parsing.extractBetween("ISIN code", "kv-form-attribute"),
             Parsing.extractBetween("<div class=\"kv-attribute\">", "</div>")
         );
-        String reliability = Parsing.apply(
+        String reliability = Parsing.applyOrEmpty(
             rawHttp,
             Parsing.extractBetween("Reliability", "</div>")
         );
-        String yieldCalc = Parsing.apply(
+        String yieldCalc = Parsing.applyOrEmpty(
             rawHttp,
             Parsing.extractBetween("Yield calculation</div>", "<div class=\"widget-header\">"),
             Parsing.extractBetween("<div class=\"widget-text mb-4\" style=\"margin-top: 1px; padding: 10px;\">", "</div>")
