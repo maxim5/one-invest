@@ -12,7 +12,10 @@ public class BondAnalyzer implements AutoCloseable {
     public void analyze(@NotNull List<Isin> isins) {
         List<BondData> bondData = isins.stream().map(aggregator::fetchAllData).toList();
         for (BondData data : bondData) {
-            System.out.println(data.isin() + " " + data.shortname() + " " + data.maturityDate() + " " + data.couponYield());
+            System.out.println(
+                "%s  %-10s  %tF  %5.2f  %5.2f"
+                    .formatted(data.isin(), data.shortname(), data.maturityDate(), data.couponYield(), data.annualYieldIfBuyNow())
+            );
         }
     }
 

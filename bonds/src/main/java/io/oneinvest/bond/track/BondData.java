@@ -67,6 +67,14 @@ public record BondData(@NotNull Isin isin,
         return firstNonNull(smartlabData, dohodData).couponAbsAnnual();
     }
 
+    public double annualYieldIfBuyNow() {
+        BlackTerminalParsedYield parseYield;
+        if (blackTerminalData == null || (parseYield = blackTerminalData.parseYield()) == null) {
+            return -1;
+        }
+        return parseYield.totalInterest();
+    }
+
     @Override
     public @NotNull List<Payment> payments() {
         return firstNonNull(moexData, smartlabData).payments();

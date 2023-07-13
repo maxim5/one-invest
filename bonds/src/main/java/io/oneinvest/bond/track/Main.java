@@ -9,9 +9,9 @@ public class Main {
     // https://cbonds.ru/bonds/1405840/
 
     public static void main(String[] args) {
-        fetchOne();
+        // fetchOne();
         analyze();
-        analyzePortfolio();
+        // analyzePortfolio();
     }
 
     private static void analyzePortfolio() {
