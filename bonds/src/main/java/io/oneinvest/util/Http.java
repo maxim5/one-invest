@@ -21,6 +21,9 @@ public class Http {
     }
 
     public static @NotNull String httpCall(@NotNull String url, @NotNull HttpCache cache, @NotNull HttpOptions options) {
+        if (!options.cacheEnabled()) {
+            return httpCall(url);
+        }
         HttpCache.HttpEntry httpEntry = cache.get(url);
         if (httpEntry != null && httpEntry.isFresh(options.expireMillis())) {
             return httpEntry.contentAsString();
@@ -50,5 +53,9 @@ public class Http {
         }
     }
 
-    public record HttpOptions(long expireMillis) {}
+    public record HttpOptions(boolean cacheEnabled, long expireMillis) {
+        public HttpOptions(long expireMillis) {
+            this(true, expireMillis);
+        }
+    }
 }
