@@ -1,6 +1,7 @@
 package io.oneinvest.bond.track;
 
 import io.oneinvest.bond.track.BondCashflowInfo.Payment;
+import io.oneinvest.util.Table;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -11,12 +12,11 @@ public class BondAnalyzer implements AutoCloseable {
 
     public void analyze(@NotNull List<Isin> isins) {
         List<BondData> bondData = isins.stream().map(aggregator::fetchAllData).toList();
-        for (BondData data : bondData) {
-            System.out.println(
-                "%s  %-10s  %tF  %5.2f  %5.2f"
-                    .formatted(data.isin(), data.shortname(), data.maturityDate(), data.couponYield(), data.annualYieldIfBuyNow())
-            );
-        }
+        Table table = Table.fromRows(
+            bondData,
+            data -> toArray(data.isin(), data.shortname(), data.maturityDate(), data.couponYield(), data.annualYieldIfBuyNow())
+        );
+        table.withFormats(Table.Formats.of("%s %-10s %tF %5.2f %5.2f")).println(2);
     }
 
     public void analyzePortfolio(@NotNull List<Position> positions) {
@@ -34,15 +34,18 @@ public class BondAnalyzer implements AutoCloseable {
             rows.add(new Row(position, price, thisYearCashflow, nextYearCashflow));
         }
 
-        for (Row row : rows) {
-            System.out.println("%s:  2023=%.0f (%.1f%%)  2024=%.0f (%.1f%%)".formatted(
+        double norm = totalPos;
+        Table table = Table.fromRows(
+            rows,
+            row -> toArray(
                 row.isin(),
                 row.cashflow0() * row.pos(),
-                row.cashflow0() * row.pos() / totalPos,
+                row.cashflow0() * row.pos() / norm,
                 row.cashflow1() * row.pos(),
-                row.cashflow1() * row.pos() / totalPos
-            ));
-        }
+                row.cashflow1() * row.pos() / norm
+            )
+        );
+        table.withFormats(Table.Formats.of("%s %5.0f %3.1f%% %5.0f %3.1f%%")).println(2);
     }
 
     @Override
@@ -58,5 +61,9 @@ public class BondAnalyzer implements AutoCloseable {
         public int pos() {
             return position.pos();
         }
+    }
+
+    private static @NotNull Object[] toArray(@NotNull Object ... objects) {
+        return objects;
     }
 }
