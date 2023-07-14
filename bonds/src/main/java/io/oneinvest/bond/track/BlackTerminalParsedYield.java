@@ -1,13 +1,13 @@
 package io.oneinvest.bond.track;
 
+import io.oneinvest.util.Parser;
+import io.oneinvest.util.Parser.ErrorHandling;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.Normalizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.oneinvest.util.Parsing.parseDouble;
 
 public record BlackTerminalParsedYield(double notional,
                                        double price,
@@ -17,6 +17,8 @@ public record BlackTerminalParsedYield(double notional,
                                        double totalPaid,
                                        double totalIncome,
                                        double totalInterest) {
+    private static final Parser parser = new Parser(ErrorHandling.INFO);
+
     public static @Nullable BlackTerminalParsedYield parseOrNull(@NotNull String yieldCalc) {
         yieldCalc = Normalizer.normalize(yieldCalc, Normalizer.Form.NFD);
         yieldCalc = fixWhitespace(yieldCalc).trim();
@@ -26,14 +28,14 @@ public record BlackTerminalParsedYield(double notional,
         }
         try {
             return new BlackTerminalParsedYield(
-                parseDouble(matcher.group(3), -1),
-                parseDouble(matcher.group(4), -1),
-                parseDouble(matcher.group(7), -1),
-                parseDouble(matcher.group(12), -1),
-                parseDouble(matcher.group(14), -1),
-                parseDouble(matcher.group(22), -1),
-                parseDouble(matcher.group(30), -1),
-                parseDouble(matcher.group(37), -1)
+                parser.parseDouble(matcher.group(3), -1),
+                parser.parseDouble(matcher.group(4), -1),
+                parser.parseDouble(matcher.group(7), -1),
+                parser.parseDouble(matcher.group(12), -1),
+                parser.parseDouble(matcher.group(14), -1),
+                parser.parseDouble(matcher.group(22), -1),
+                parser.parseDouble(matcher.group(30), -1),
+                parser.parseDouble(matcher.group(37), -1)
             );
         } catch (Exception e) {
             return null;

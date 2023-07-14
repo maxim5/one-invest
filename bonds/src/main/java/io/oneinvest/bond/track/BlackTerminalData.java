@@ -1,29 +1,32 @@
 package io.oneinvest.bond.track;
 
-import io.oneinvest.util.Parsing;
+import io.oneinvest.util.Parser;
+import io.oneinvest.util.Parser.ErrorHandling;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public record BlackTerminalData(@NotNull Isin isin,
                                 int rating,
                                 @NotNull String rawYieldCalc) {
+    private static final Parser parser = new Parser(ErrorHandling.INFO);
+    
     public static @NotNull BlackTerminalData fromHttpEn(@NotNull String rawHttp) {
-        String isin = Parsing.applyOrEmpty(
+        String isin = parser.applyOrEmpty(
             rawHttp,
-            Parsing.extractBetween("ISIN code", "kv-form-attribute"),
-            Parsing.extractBetween("<div class=\"kv-attribute\">", "</div>")
+            Parser.extractBetween("ISIN code", "kv-form-attribute"),
+            Parser.extractBetween("<div class=\"kv-attribute\">", "</div>")
         );
-        String reliability = Parsing.applyOrEmpty(
+        String reliability = parser.applyOrEmpty(
             rawHttp,
-            Parsing.extractBetween("Reliability", "</div>")
+            Parser.extractBetween("Reliability", "</div>")
         );
-        String yieldCalc = Parsing.applyOrEmpty(
+        String yieldCalc = parser.at(ErrorHandling.LOG).applyOrEmpty(
             rawHttp,
-            Parsing.extractBetween("Yield calculation</div>", "<div class=\"widget-header\">"),
-            Parsing.extractBetween("<div class=\"widget-text mb-4\" style=\"margin-top: 1px; padding: 10px;\">", "</div>")
+            Parser.extractBetween("Yield calculation</div>", "<div class=\"widget-header\">"),
+            Parser.extractBetween("<div class=\"widget-text mb-4\" style=\"margin-top: 1px; padding: 10px;\">", "</div>")
         );
 
-        return new BlackTerminalData(Isin.of(isin), Parsing.countOccurrences(reliability, "fas fa-star"), yieldCalc);
+        return new BlackTerminalData(Isin.of(isin), Parser.countOccurrences(reliability, "fas fa-star"), yieldCalc);
     }
 
     public @Nullable BlackTerminalParsedYield parseYield() {

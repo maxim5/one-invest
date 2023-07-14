@@ -8,10 +8,22 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
 
-public class Parsing {
+public class Parser {
     private static final FluentLogger log = FluentLogger.forEnclosingClass();
+
+    private final ErrorHandling errorHandling;
+
+    public Parser(@NotNull ErrorHandling errorHandling) {
+        this.errorHandling = errorHandling;
+    }
+
+    public @NotNull Parser at(@NotNull ErrorHandling errorHandling) {
+        return new Parser(errorHandling);
+    }
 
     @SafeVarargs
     public static @NotNull String apply(@NotNull String input, @NotNull Function<String, String> @NotNull ... chain) {
@@ -23,11 +35,11 @@ public class Parsing {
     }
 
     @SafeVarargs
-    public static @NotNull String applyOrEmpty(@NotNull String input, @NotNull Function<String, String> @NotNull ... chain) {
+    public final @NotNull String applyOrEmpty(@NotNull String input, @NotNull Function<String, String> @NotNull ... chain) {
         try {
             return apply(input, chain);
         } catch (Throwable e) {
-            log.atWarning().withCause(e).log("Failed to parse the input string");
+            handleError(e, log -> log.log("Failed to parse the input string"));
             return "";
         }
     }
@@ -41,11 +53,11 @@ public class Parsing {
         return input.substring(i, j);
     }
 
-    public static @NotNull String extractBetweenOrEmpty(@NotNull String input, @NotNull String from, @NotNull String to) {
+    public @NotNull String extractBetweenOrEmpty(@NotNull String input, @NotNull String from, @NotNull String to) {
         try {
             return extractBetween(input, from, to);
         } catch (Throwable e) {
-            log.atWarning().withCause(e).log("Failed to parse the input string");
+            handleError(e, log -> log.log("Failed to parse the input string"));
             return "";
         }
     }
@@ -110,45 +122,70 @@ public class Parsing {
         return count;
     }
 
-    public static int parseInt(@NotNull String s, int def) {
+    public int parseInt(@NotNull String s, int def) {
         if (s.isEmpty()) {
             return def;
         }
         try {
             return Integer.parseInt(s.trim().replaceAll("[^0-9.+-]", ""));
         } catch (NumberFormatException e) {
-            log.atWarning().withCause(e).log("Failed to parse the integer: `%s`", s);
+            handleError(e, log -> log.log("Failed to parse the integer: `%s`", s));
             return def;
         }
     }
 
-    public static double parseDouble(@NotNull String s, double def) {
+    public double parseDouble(@NotNull String s, double def) {
         if (s.isEmpty()) {
             return def;
         }
         try {
             return Double.parseDouble(s.trim().replaceAll("[^0-9.+-]", ""));
         } catch (NumberFormatException e) {
-            log.atWarning().withCause(e).log("Failed to parse the double: `%s`", s);
+            handleError(e, log -> log.log("Failed to parse the double: `%s`", s));
             return def;
         }
     }
 
     public static final Date NO_DATE = new Date(0);
 
-    public static @NotNull Date parseDate(@NotNull DateFormat format, @NotNull String s, @NotNull Date def) {
+    public @NotNull Date parseDate(@NotNull DateFormat format, @NotNull String s, @NotNull Date def) {
         try {
             return format.parse(s);
         } catch (java.text.ParseException e) {
+            handleError(e, log -> log.log("Failed to parse date: `%s`", s));
             return def;
         }
     }
 
-    public static @Nullable Date parseDate(@NotNull DateFormat format, @NotNull String s) {
+    public @Nullable Date parseDate(@NotNull DateFormat format, @NotNull String s) {
         try {
             return format.parse(s);
         } catch (java.text.ParseException e) {
+            handleError(e, log -> log.log("Failed to parse date: `%s`", s));
             return null;
         }
+    }
+
+    private void handleError(@NotNull Throwable e, @NotNull Consumer<FluentLogger.Api> consumer) {
+        switch (errorHandling) {
+            case SKIP -> {}
+            case LOG -> consumer.accept(log.at(Level.FINE));
+            case INFO -> consumer.accept(log.at(Level.INFO).withCause(e));
+            case WARN -> consumer.accept(log.at(Level.WARNING).withCause(e));
+            case FAIL -> throwAny(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> void throwAny(Throwable exception) throws T {
+        throw (T) exception;
+    }
+
+    public enum ErrorHandling {
+        SKIP,
+        LOG,
+        INFO,
+        WARN,
+        FAIL,
     }
 }

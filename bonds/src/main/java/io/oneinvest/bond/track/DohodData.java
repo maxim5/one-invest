@@ -1,6 +1,7 @@
 package io.oneinvest.bond.track;
 
-import io.oneinvest.util.Parsing;
+import io.oneinvest.util.Parser;
+import io.oneinvest.util.Parser.ErrorHandling;
 import io.oneinvest.util.TimeSeries;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,6 +15,7 @@ public record DohodData(@NotNull Isin isin,
                         @NotNull DohodBondMap bond,
                         @NotNull List<DohodBondMap> replacements) implements BondBasicInfo, BondCouponInfo {
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("dd-MM-yyyy");
+    private static final Parser parser = new Parser(ErrorHandling.INFO);
 
     @Override
     public @NotNull String name() {
@@ -37,7 +39,7 @@ public record DohodData(@NotNull Isin isin,
 
     @Override
     public @NotNull Date issueDate() {
-        return Parsing.parseDate(FORMAT, issueDateStr(), Parsing.NO_DATE);
+        return parser.parseDate(FORMAT, issueDateStr(), Parser.NO_DATE);
     }
 
     @Override
@@ -47,7 +49,7 @@ public record DohodData(@NotNull Isin isin,
 
     @Override
     public @NotNull Date maturityDate() {
-        return Parsing.parseDate(FORMAT, maturityDateStr(), Parsing.NO_DATE);
+        return parser.parseDate(FORMAT, maturityDateStr(), Parser.NO_DATE);
     }
 
     @Override
