@@ -3,6 +3,9 @@ package io.oneinvest.util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -112,6 +115,17 @@ public class Table {
                 System.out.print(padded);
             }
             System.out.println();
+        }
+    }
+
+    public void toCsv(@NotNull Writer writer) {
+        try {
+            writer.write(Arrays.stream(header.namesOrEmpty()).collect(Csv.toCsvLine()));
+            for (Cell[] row : cells) {
+                writer.write(Arrays.stream(row).map(Cell::formatted).collect(Csv.toCsvLine()));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
