@@ -25,6 +25,9 @@ public class DohodProvider implements AutoCloseable {
 
     public @NotNull DohodData fetch(@NotNull Isin isin, @NotNull HttpOptions options) {
         DohodBondMap[] bonds = fetchReplacement(isin, options);
+        if (bonds.length == 0) {
+            throw new NotFoundException();
+        }
         DohodBondMap thisBond = Arrays.stream(bonds).filter(bond -> bond.matches(isin)).findFirst().orElseThrow();
         List<DohodBondMap> replacements = Arrays.stream(bonds).filter(bond -> !bond.matches(isin)).toList();
         TimeSeries dailyPrices = fetchRates(isin, thisBond.boardid(), options);

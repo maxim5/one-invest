@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class BondDataAggregator implements AutoCloseable {
@@ -24,6 +25,8 @@ public class BondDataAggregator implements AutoCloseable {
     }
 
     public @NotNull BondData fetchAllData(@NotNull Isin isin, @NotNull Options options) {
+        log.atInfo().log("Processing %s...", isin);
+
         DohodData dohodData = fetchDohodData(isin, options);
         FinPlanData finPlanData = fetchFinPlanData(isin, options);
         MoexData moexData = fetchMoexData(isin, options);
@@ -40,63 +43,59 @@ public class BondDataAggregator implements AutoCloseable {
     }
 
     private @Nullable BlackTerminalData fetchBlackTerminalData(@NotNull Isin isin, @NotNull String board, @NotNull Options options) {
-        try {
+        return runAndCatch(isin, "BlackTerminal", () -> {
             if (options.fetchBlackTerminal()) {
                 return blackTerminalProvider.fetch(isin, board, httpOptions);
             }
             return null;
-        } catch (Throwable throwable) {
-            log.atWarning().withCause(throwable).log("Failed to fetch BlackTerminal data for: %s", isin);
-            return null;
-        }
+        });
     }
 
     private @Nullable DohodData fetchDohodData(@NotNull Isin isin, @NotNull Options options) {
-        try {
+        return runAndCatch(isin, "Dohod", () -> {
             if (options.fetchDohod()) {
                 return dohodProvider.fetch(isin, httpOptions);
             }
             return null;
-        } catch (Throwable throwable) {
-            log.atWarning().withCause(throwable).log("Failed to fetch Dohod data for: %s", isin);
-            return null;
-        }
+        });
     }
 
     private @Nullable FinPlanData fetchFinPlanData(@NotNull Isin isin, @NotNull Options options) {
-        try {
+        return runAndCatch(isin, "FinPlan", () -> {
             if (options.fetchFinPlan()) {
                 return finPlanProvider.fetch(isin, httpOptions);
             }
             return null;
-        } catch (Throwable throwable) {
-            log.atWarning().withCause(throwable).log("Failed to fetch FinPlan data for: %s", isin);
-            return null;
-        }
+        });
     }
 
     private @Nullable MoexData fetchMoexData(@NotNull Isin isin, @NotNull Options options) {
-        try {
+        return runAndCatch(isin, "Moex", () -> {
             if (options.fetchMoex()) {
                 return moexProvider.fetch(isin, httpOptions);
             }
             return null;
-        } catch (Throwable throwable) {
-            log.atWarning().withCause(throwable).log("Failed to fetch Moex data for: %s", isin);
-            return null;
-        }
+        });
     }
 
     private @Nullable SmartlabData fetchSmartlabData(@NotNull Isin isin, @NotNull Options options) {
-        try {
+        return runAndCatch(isin, "SmartLab", () -> {
             if (options.fetchSmartlab()) {
                 return smartlabProvider.fetch(isin, httpOptions);
             }
             return null;
+        });
+    }
+
+    private static <T> @Nullable T runAndCatch(@NotNull Isin isin, @NotNull String name, @NotNull Supplier<T> supplier) {
+        try {
+            return supplier.get();
+        } catch (NotFoundException e) {
+            log.atFine().withCause(e).log("Bond not found in %s: %s", name, isin);
         } catch (Throwable throwable) {
-            log.atWarning().withCause(throwable).log("Failed to fetch SmartLab data for: %s", isin);
-            return null;
+            log.atWarning().withCause(throwable).log("Failed to fetch %s data for: %s", name, isin);
         }
+        return null;
     }
 
     @Override
