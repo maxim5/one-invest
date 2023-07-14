@@ -8,18 +8,34 @@ import java.util.List;
 import java.util.function.Function;
 
 public class Table {
-    private static final Table EMPTY_TABLE = new Table(new Cell[0][0]);
+    private static final Header EMPTY_HEADER = new Header(null);
+    private static final Table EMPTY_TABLE = new Table(new Cell[0][0], EMPTY_HEADER);
 
     private final Cell[][] cells;
+    private final Header header;
 
-    private Table(@NotNull Cell @NotNull[] @NotNull[] cells) {
+    private Table(@NotNull Cell @NotNull[] @NotNull[] cells, @NotNull Header header) {
         this.cells = cells;
+        this.header = header;
+        assert header.isEmpty() || header.length() == columnsNum() : "Column size mismatch: %s vs %s".formatted(header, columnsNum());
     }
 
     public static <T> @NotNull Table fromRows(@NotNull List<T> rows, @NotNull Function<T, Object[]> expand) {
+        return fromRows(EMPTY_HEADER, rows, expand);
+    }
+
+    public static <T> @NotNull Table fromRows(@NotNull Formats formats,
+                                              @NotNull List<T> rows,
+                                              @NotNull Function<T, Object[]> expand) {
+        return fromRows(EMPTY_HEADER, formats, rows, expand);
+    }
+
+    public static <T> @NotNull Table fromRows(@NotNull Header header,
+                                              @NotNull List<T> rows,
+                                              @NotNull Function<T, Object[]> expand) {
         int rowsNum = rows.size();
-        int colsNum = -1;
-        Cell[][] cells = null;
+        int colsNum = header.isEmpty() ? -1 : header.length();
+        Cell[][] cells = colsNum < 0 ? null : new Cell[rowsNum][colsNum];
         int i = 0;
         for (T row : rows) {
             Object[] rawValues = expand.apply(row);
@@ -33,10 +49,11 @@ public class Table {
             }
             i++;
         }
-        return cells != null ? new Table(cells) : EMPTY_TABLE;
+        return cells != null ? new Table(cells, header) : EMPTY_TABLE;
     }
 
-    public static <T> @NotNull Table fromRows(@NotNull Formats formats,
+    public static <T> @NotNull Table fromRows(@NotNull Header header,
+                                              @NotNull Formats formats,
                                               @NotNull List<T> rows,
                                               @NotNull Function<T, Object[]> expand) {
         int rowsNum = rows.size();
@@ -51,7 +68,7 @@ public class Table {
             }
             i++;
         }
-        return rowsNum > 0 ? new Table(cells) : EMPTY_TABLE;
+        return rowsNum > 0 ? new Table(cells, header) : EMPTY_TABLE;
     }
 
     public int rowsNum() {
@@ -59,7 +76,11 @@ public class Table {
     }
 
     public int columnsNum() {
-        return cells[0].length;
+        return cells.length == 0 ? 0 : cells[0].length;
+    }
+
+    public @NotNull Table withHeader(@NotNull Header header) {
+        return new Table(cells, header);
     }
 
     public @NotNull Table withFormats(@NotNull Formats formats) {
@@ -75,17 +96,44 @@ public class Table {
                 newRow[j] = row[j].withFormat(formats.formats[j]);
             }
         }
-        return new Table(cells);
+        return new Table(cells, header);
     }
 
     public void println(int padding) {
         String padded = " ".repeat(padding);
+        for (String col : header.namesOrEmpty()) {
+            System.out.print(col);
+            System.out.print(padded);
+        }
+        System.out.println();
         for (Cell[] row : cells) {
             for (Cell cell : row) {
                 System.out.print(cell.formatted());
                 System.out.print(padded);
             }
             System.out.println();
+        }
+    }
+
+    public record Header(@NotNull String @Nullable[] names) {
+        public static @NotNull Header of(@NotNull String @Nullable ... names) {
+            return new Header(names);
+        }
+
+        public @NotNull String @NotNull[] namesOrEmpty() {
+            return names != null ? names : new String[0];
+        }
+
+        public boolean isEmpty() {
+            return names == null;
+        }
+
+        public boolean isPresent() {
+            return names != null;
+        }
+
+        public int length() {
+            return names != null ? names.length : 0;
         }
     }
 

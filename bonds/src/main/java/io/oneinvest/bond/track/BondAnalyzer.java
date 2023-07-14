@@ -16,7 +16,10 @@ public class BondAnalyzer implements AutoCloseable {
             bondData,
             data -> toArray(data.isin(), data.shortname(), data.maturityDate(), data.couponYield(), data.annualYieldIfBuyNow())
         );
-        table.withFormats(Table.Formats.of("%s %-10s %tF %5.2f %5.2f")).println(2);
+        table
+            .withHeader(Table.Header.of("ISIN", "Name", "Maturity", "Coupon", "Annual Yield"))
+            .withFormats(Table.Formats.of("%s %-10s %tF %5.2f %5.2f"))
+            .println(2);
     }
 
     public void analyzePortfolio(@NotNull List<Position> positions) {
@@ -45,7 +48,10 @@ public class BondAnalyzer implements AutoCloseable {
                 row.cashflow1() * row.pos() / norm
             )
         );
-        table.withFormats(Table.Formats.of("%s %5.0f %3.1f%% %5.0f %3.1f%%")).println(2);
+        table
+            .withHeader(Table.Header.of("ISIN", "2023", "2023 Percent", "2024", "2024 Percent"))
+            .withFormats(Table.Formats.of("%s %5.0f %3.1f%% %5.0f %3.1f%%"))
+            .println(2);
     }
 
     @Override
