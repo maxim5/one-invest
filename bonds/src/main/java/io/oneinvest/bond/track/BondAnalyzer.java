@@ -34,14 +34,15 @@ public class BondAnalyzer implements AutoCloseable {
             totalPos += position.pos() * price;
             double thisYearCashflow = data.knownPaymentsFor(0).stream().mapToDouble(Payment::value).sum();
             double nextYearCashflow = data.knownPaymentsFor(1).stream().mapToDouble(Payment::value).sum();
-            rows.add(new Row(position, price, thisYearCashflow, nextYearCashflow));
+            rows.add(new Row(position, data, price, thisYearCashflow, nextYearCashflow));
         }
 
         double norm = totalPos;
         Table table = Table.fromRows(
             rows,
             row -> toArray(
-                row.isin(),
+                row.data().isin(),
+                row.data().shortname(),
                 row.cashflow0() * row.pos(),
                 row.cashflow0() * row.pos() / norm,
                 row.cashflow1() * row.pos(),
@@ -49,8 +50,8 @@ public class BondAnalyzer implements AutoCloseable {
             )
         );
         table
-            .withHeader(Table.Header.of("ISIN", "2023", "2023 Percent", "2024", "2024 Percent"))
-            .withFormats(Table.Formats.of("%s %5.0f %3.1f%% %5.0f %3.1f%%"))
+            .withHeader(Table.Header.of("ISIN", "Name", "2023", "2023 Percent", "2024", "2024 Percent"))
+            .withFormats(Table.Formats.of("%s %-10s %5.0f %3.1f%% %5.0f %3.1f%%"))
             .println(2);
     }
 
@@ -59,11 +60,7 @@ public class BondAnalyzer implements AutoCloseable {
         aggregator.close();
     }
 
-    private record Row(Position position, double price, double cashflow0, double cashflow1) {
-        public @NotNull Isin isin() {
-            return position.isin();
-        }
-
+    private record Row(@NotNull Position position, @NotNull BondData data, double price, double cashflow0, double cashflow1) {
         public int pos() {
             return position.pos();
         }
