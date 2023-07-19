@@ -64,7 +64,7 @@ public class DohodProvider implements AutoCloseable {
                 @Override
                 public Object handleWeirdStringValue(DeserializationContext ctxt, Class<?> targetType,
                                                      String valueToConvert, String failureMsg) {
-                    log.atWarning().log("Failed to parse the string: %s", failureMsg);
+                    log.atWarning().log("[Dohod] Json failed to parse the string: %s", failureMsg);
                     if (Number.class.isAssignableFrom(targetType)) {
                         return -1;
                     }
@@ -73,7 +73,7 @@ public class DohodProvider implements AutoCloseable {
                 @Override
                 public Object handleWeirdNumberValue(DeserializationContext ctxt, Class<?> targetType,
                                                      Number valueToConvert, String failureMsg) {
-                    log.atWarning().log("Failed to parse the number: %s", failureMsg);
+                    log.atWarning().log("[Dohod] Json failed to parse the number: %s", failureMsg);
                     return -1;
                 }
             });
